@@ -65,13 +65,13 @@ void arp_req(uint8_t *target_ip) {
 
     // 填写APR报头
     arp_pkt_t arp_packet = arp_init_pkt;
-    arp_packet.hw_type16 = swap16(ARP_HW_ETHER);
-    arp_packet.pro_type16 = swap16(NET_PROTOCOL_IP);
-    arp_packet.hw_len = NET_MAC_LEN;
-    arp_packet.pro_len = NET_IP_LEN;
+    //arp_packet.hw_type16 = swap16(ARP_HW_ETHER);
+    //arp_packet.pro_type16 = swap16(NET_PROTOCOL_IP);
+    //arp_packet.hw_len = NET_MAC_LEN;
+    //arp_packet.pro_len = NET_IP_LEN;
     arp_packet.opcode16 = swap16(ARP_REQUEST);
-    memcpy(arp_packet.sender_ip, net_if_ip, NET_IP_LEN);
-    memcpy(arp_packet.sender_mac, net_if_mac, NET_MAC_LEN);
+    //memcpy(arp_packet.sender_ip, net_if_ip, NET_IP_LEN);
+    //memcpy(arp_packet.sender_mac, net_if_mac, NET_MAC_LEN);
     memcpy(arp_packet.target_ip, target_ip, NET_IP_LEN);
     
     // 把报头填充到buf里面
@@ -93,13 +93,13 @@ void arp_resp(uint8_t *target_ip, uint8_t *target_mac) {
 
     // 填写APR报头
     arp_pkt_t arp_packet = arp_init_pkt;
-    arp_packet.hw_type16 = swap16(ARP_HW_ETHER);
-    arp_packet.pro_type16 = swap16(NET_PROTOCOL_IP);
-    arp_packet.hw_len = NET_MAC_LEN;
-    arp_packet.pro_len = NET_IP_LEN;
+    //arp_packet.hw_type16 = swap16(ARP_HW_ETHER);
+    //arp_packet.pro_type16 = swap16(NET_PROTOCOL_IP);
+    //arp_packet.hw_len = NET_MAC_LEN;
+    //arp_packet.pro_len = NET_IP_LEN;
     arp_packet.opcode16 = swap16(ARP_REPLY);
-    memcpy(arp_packet.sender_ip, net_if_ip, NET_IP_LEN);
-    memcpy(arp_packet.sender_mac, net_if_mac, NET_MAC_LEN);
+    //memcpy(arp_packet.sender_ip, net_if_ip, NET_IP_LEN);
+    //memcpy(arp_packet.sender_mac, net_if_mac, NET_MAC_LEN);
     memcpy(arp_packet.target_ip, target_ip, NET_IP_LEN);
     memcpy(arp_packet.target_mac, target_mac, NET_MAC_LEN);
      
@@ -123,11 +123,13 @@ void arp_in(buf_t *buf, uint8_t *src_mac) {
     // 检查报头数据
     arp_pkt_t *arp_pkt = (arp_pkt_t*) buf->data;
     
-    if((arp_pkt->hw_type16 != swap16(ARP_HW_ETHER)) || 
-       (arp_pkt->pro_type16 != swap16(NET_PROTOCOL_IP)) ||
-       (arp_pkt->hw_len != NET_MAC_LEN) ||
-       (arp_pkt->pro_len != NET_IP_LEN) ||
-       (arp_pkt->opcode16 != swap16(ARP_REQUEST) && arp_pkt->opcode16 != swap16(ARP_REPLY))) return;
+    if (arp_pkt->hw_type16 != swap16(ARP_HW_ETHER) ||
+        arp_pkt->pro_type16 != swap16(NET_PROTOCOL_IP) ||
+        arp_pkt->hw_len != NET_MAC_LEN ||
+        arp_pkt->pro_len != NET_IP_LEN ||
+        (arp_pkt->opcode16 != swap16(ARP_REQUEST) &&
+        arp_pkt->opcode16 != swap16(ARP_REPLY))
+    ) return;
 
     // 更新ARP表项
     map_set(&arp_table, arp_pkt->sender_ip, src_mac);
@@ -143,7 +145,8 @@ void arp_in(buf_t *buf, uint8_t *src_mac) {
         return;
     }
     else {
-        if(arp_pkt->opcode16 == swap16(ARP_REQUEST) && !memcpy(arp_pkt->target_ip, net_if_ip, NET_IP_LEN)) {
+        // 判断是否是正确的请求报文
+        if(arp_pkt->opcode16 == swap16(ARP_REQUEST) && !memcmp(arp_pkt->target_ip, net_if_ip, NET_IP_LEN)) {
             arp_resp(arp_pkt->sender_ip, arp_pkt->sender_mac);
         }
     }
@@ -166,6 +169,7 @@ void arp_out(buf_t *buf, uint8_t *ip) {
     }
     else { // 没找到则需要进一步处理,需要判断buf此时是否有包(有就说明已经有arp请求了)
         if(map_get(&arp_buf, ip) == NULL) {
+            // arp_buf存的是(ip, buf),指代的是这个buf应该发到哪个ip地址
             map_set(&arp_buf, ip, buf);  // map原始的键值对中值存的是数据包
             arp_req(ip);
         }
