@@ -63,15 +63,9 @@ void arp_req(uint8_t *target_ip) {
     // 调用init进行初始化
     buf_init(&txbuf, sizeof(arp_pkt_t));
 
-    // 填写APR报头
+    // 填写ARP报头
     arp_pkt_t arp_packet = arp_init_pkt;
-    //arp_packet.hw_type16 = swap16(ARP_HW_ETHER);
-    //arp_packet.pro_type16 = swap16(NET_PROTOCOL_IP);
-    //arp_packet.hw_len = NET_MAC_LEN;
-    //arp_packet.pro_len = NET_IP_LEN;
     arp_packet.opcode16 = swap16(ARP_REQUEST);
-    //memcpy(arp_packet.sender_ip, net_if_ip, NET_IP_LEN);
-    //memcpy(arp_packet.sender_mac, net_if_mac, NET_MAC_LEN);
     memcpy(arp_packet.target_ip, target_ip, NET_IP_LEN);
     
     // 把报头填充到buf里面
@@ -93,13 +87,7 @@ void arp_resp(uint8_t *target_ip, uint8_t *target_mac) {
 
     // 填写APR报头
     arp_pkt_t arp_packet = arp_init_pkt;
-    //arp_packet.hw_type16 = swap16(ARP_HW_ETHER);
-    //arp_packet.pro_type16 = swap16(NET_PROTOCOL_IP);
-    //arp_packet.hw_len = NET_MAC_LEN;
-    //arp_packet.pro_len = NET_IP_LEN;
     arp_packet.opcode16 = swap16(ARP_REPLY);
-    //memcpy(arp_packet.sender_ip, net_if_ip, NET_IP_LEN);
-    //memcpy(arp_packet.sender_mac, net_if_mac, NET_MAC_LEN);
     memcpy(arp_packet.target_ip, target_ip, NET_IP_LEN);
     memcpy(arp_packet.target_mac, target_mac, NET_MAC_LEN);
      
@@ -165,7 +153,7 @@ void arp_out(buf_t *buf, uint8_t *ip) {
 
     // 如果能找到MAC就直接发出去
     if(mac_address != NULL) {
-        ethernet_out(buf, mac_address, NET_PROTOCOL_IP);  // 这是发给以太网层的
+        ethernet_out(buf, mac_address, NET_PROTOCOL_IP);  
     }
     else { // 没找到则需要进一步处理,需要判断buf此时是否有包(有就说明已经有arp请求了)
         if(map_get(&arp_buf, ip) == NULL) {

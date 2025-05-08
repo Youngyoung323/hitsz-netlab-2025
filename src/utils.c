@@ -2,6 +2,7 @@
 
 #include "net.h"
 
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 /**
@@ -70,7 +71,21 @@ uint8_t ip_prefix_match(uint8_t *ipa, uint8_t *ipb) {
  * @return uint16_t 校验和
  */
 uint16_t checksum16(uint16_t *data, size_t len) {
-    // TO-DO
+    uint32_t sum = 0;
+    // step1 and step2
+    while(len > 1) {
+       sum += *data++;
+       len = len-2; 
+    }
+    if(len == 1) sum += *(uint8_t *)data;
+
+    // step3
+    while((sum >> 16) > 0) {
+        sum = (sum >> 16) + (sum & 0xFFFF);
+    }
+
+    // step4
+    return ~(uint16_t)sum;
 }
 
 #pragma pack(1)
