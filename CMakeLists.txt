@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0.0)
 project(net VERSION 0.1.0)
-
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Add extra source files here if any
 set(EXTRA_FILE 
     

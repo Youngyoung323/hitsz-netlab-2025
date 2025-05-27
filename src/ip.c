@@ -13,9 +13,6 @@
  * @param buf 要处理的数据包
  * @param src_mac 源mac地址
  */
-// 标识字段
-uint16_t send_id = 0;
-
 void ip_in(buf_t *buf, uint8_t *src_mac)
 {
     // 检查数据包长度
@@ -98,26 +95,30 @@ void ip_fragment_out(buf_t *buf, uint8_t *ip, net_protocol_t protocol, int id, u
  */
 void ip_out(buf_t *buf, uint8_t *ip, net_protocol_t protocol)
 {
-    int i;
-    int Max_load_len = 1500-sizeof(ip_hdr_t);
-    buf_t* ip_buf;
+    static int send_id = 0;
+    int Max_load_len = ETHERNET_MAX_TRANSPORT_UNIT - sizeof(ip_hdr_t);
+    
     // 检查数据报长度
     if(buf->len <= Max_load_len) {
-        ip_fragment_out(buf, ip, protocol, send_id++, 0, 0);
+        ip_fragment_out(buf, ip, protocol, send_id, 0, 0);
     }
     else {
         // 分片处理
-        for(i = 0; (i+1)*Max_load_len < buf->len; i++) {
-            // 此时不考虑IP首部,首部在fragment_out中添加
-            buf_init(ip_buf, Max_load_len);
-            memcpy(ip_buf->data, buf->data+i*Max_load_len, Max_load_len);
-            ip_fragment_out(ip_buf, ip, protocol, send_id, i*Max_load_len, 1);
+        uint16_t offset = 0;
+        buf_t *ip_buf = (buf_t*)malloc(sizeof(buf_t));
+        while (buf->len > 0) {
+            size_t part_size = (buf->len > Max_load_len) ? Max_load_len : buf->len;
+            buf_init(ip_buf, part_size);
+            memcpy(ip_buf->data, buf->data, part_size);
+            ip_fragment_out(ip_buf, ip, protocol, send_id, offset / IP_HDR_OFFSET_PER_BYTE, (buf->len > Max_load_len) ? 1 : 0);
+            
+            // 更新相关变量
+            offset += part_size;
+            buf->data += part_size;
+            buf->len -= part_size;
         }
-        // 发送最后一个分组
-        buf_init(ip_buf, Max_load_len);
-        memcpy(ip_buf->data, buf->data+i*Max_load_len, buf->len-i*Max_load_len);
-        ip_fragment_out(ip_buf, ip, protocol, send_id++, i*Max_load_len, 0);
     }
+    send_id++;
 }
 
 /**

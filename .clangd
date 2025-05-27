@@ -1,0 +1,11 @@
+CompileFlags:
+  Add: 
+    - "-I"
+    - "F:/GCC/x86_64-w64-mingw32/include"
+    - "-I"
+    - "F:/GCC/lib/gcc/x86_64-w64-mingw32/10.3.0/include"
+    - "-I"
+    - "F:/GCC/lib/gcc/x86_64-w64-mingw32/10.3.0/include-fixed"
+    - "-I"
+    - "F:/GCC/include"
+    - "--target=x86_64-w64-windows-gnu"
