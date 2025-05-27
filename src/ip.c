@@ -32,7 +32,7 @@ void ip_in(buf_t *buf, uint8_t *src_mac)
     _ip_hdr_t->hdr_checksum16 = check_sum16_current;
 
     // 对比目的IP地址
-    if(memcpy(_ip_hdr_t->dst_ip, net_if_ip, NET_IP_LEN) != 0) return;
+    if(memcmp(_ip_hdr_t->dst_ip, net_if_ip, NET_IP_LEN) != 0) return;
 
     // 去除填充字段
     // buf->len为数据报实际长度,total_len16是不包含padding的数据报长度,两者相减为padding的长度

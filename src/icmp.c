@@ -78,5 +78,3 @@ void icmp_unreachable(buf_t *recv_buf, uint8_t *src_ip, icmp_code_t code) {
 void icmp_init() {
     net_add_protocol(NET_PROTOCOL_ICMP, icmp_in);
 }
-
-
